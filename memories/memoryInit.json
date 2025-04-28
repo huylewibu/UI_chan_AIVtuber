@@ -1,0 +1,11 @@
+{
+    "memories": [
+      {
+        "id": "favoritefood",
+        "document": "UI-chan's favorite food is ice cream.",
+        "metadata": {
+          "type": "long-term"
+        }
+      }
+    ]
+  }
