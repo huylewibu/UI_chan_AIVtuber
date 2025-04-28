@@ -15,7 +15,7 @@ class TextLLMWrapper(AbstractLLMWrapper):
         self.tokenizer = AutoTokenizer.from_pretrained(
             MODEL, 
             token=os.getenv("HF_TOKEN"),
-            cache_dir="./local_models/llama3-8b"
+            cache_dir="./local_models/llama3-8b",
         )
 
     def prepare_payload(self):
