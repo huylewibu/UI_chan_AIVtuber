@@ -71,7 +71,7 @@ MULTIMODAL_ENDPOINT = ""
 
 MULTIMODAL_CONTEXT_SIZE = 1000 #8192 # Trying out 1000 tokens to limit short term memory
 
-MODEL = "meta-llama/Meta-Llama-3-8B"
+MODEL = "SweatyCrayfish/llama-3-8b-quantized"
 MULTIMODAL_MODEL = "openbmb/MiniCPM-Llama3-V-2_5-int4"
 
 

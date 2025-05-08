@@ -106,6 +106,25 @@ class Memory(Module):
 
                 response = requests.post(LLM_ENDPOINT + "/v1/chat/completions", headers=headers, json=data, verify=False)
                 raw_memories = response.json()['choices'][0]['message']['content']
+                # chat_input = chat_section + MEMORY_PROMPT
+                # tokenizer = self.modules["text"].tokenizer
+                # model = self.modules["text"].model
+
+                # inputs = tokenizer(chat_input, return_tensors="pt").to(model.device)
+
+                # with torch.no_grad():
+                #     outputs = model.generate(
+                #         **inputs,
+                #         max_new_tokens=200,
+                #         do_sample=True,
+                #         temperature=0.7,
+                #         top_p=0.9,
+                #         repetition_penalty=1.1,
+                #         pad_token_id=tokenizer.eos_token_id
+                #     )
+
+                # generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                # raw_memories = generated_text[len(chat_input):].strip()
                 
                 # Split từng phần Q&A và thêm vào memory mới trong db 
                 for memory in raw_memories.split("{qa}"):
