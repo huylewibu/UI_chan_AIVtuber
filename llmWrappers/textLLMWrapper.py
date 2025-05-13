@@ -2,7 +2,7 @@ import os
 import torch
 import time
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig, BitsAndBytesConfig
 from constants import *
 from llmWrappers.abstractLLMWrapper import AbstractLLMWrapper
 
@@ -15,13 +15,10 @@ class TextLLMWrapper(AbstractLLMWrapper):
         self.LLM_ENDPOINT = LLM_ENDPOINT
         self.CONTEXT_SIZE = CONTEXT_SIZE
 
-        self.generation_config = GenerationConfig(
-            max_new_tokens=200,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9,
-            repetition_penalty=1.1,
-            pad_token_id=self.tokenizer.eos_token_id
+        quant_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_compute_dtype=torch.float32,
         )
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -31,16 +28,27 @@ class TextLLMWrapper(AbstractLLMWrapper):
             trust_remote_code=True,
         )
 
+        self.generation_config = GenerationConfig(
+            max_new_tokens=200,
+            do_sample=True,
+            temperature=0.7,
+            top_p=0.9,
+            repetition_penalty=1.1,
+            pad_token_id=self.tokenizer.eos_token_id
+        )
+
         self.model = AutoModelForCausalLM.from_pretrained(
             MODEL,
             cache_dir="./local_models/llama3-8b",
             trust_remote_code=True,
-            torch_dtype=torch.float16,
             token=os.getenv("HF_TOKEN"),
             device_map="auto",
+            quantization_config=quant_config,
             max_memory={0: "5GiB"}
         )
         self.model.eval()
+        print("self.model.hf_device_map: ", self.model.hf_device_map)  # Xác nhận model phân bố GPU
+        print("Model loaded on:", self.model.device)
 
     def prompt(self):
         if not self.llmState.enabled:
