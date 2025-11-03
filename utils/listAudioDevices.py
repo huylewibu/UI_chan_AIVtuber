@@ -3,9 +3,6 @@ import pyaudio
 py_audio = pyaudio.PyAudio()
 info = py_audio.get_host_api_info_by_index(0)
 
-# List all devices
-
-# Mics
 print("Microphones:")
 for i in range(0, info.get('deviceCount')):
     # Check number of input channels

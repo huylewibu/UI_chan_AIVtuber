@@ -1,8 +1,5 @@
 import copy
 import requests
-import sseclient
-import json
-import time
 from dotenv import load_dotenv
 from constants import *
 from modules.injection import Injection
@@ -34,8 +31,7 @@ class AbstractLLMWrapper:
         # Filter messages với mấy từ trong blacklist
         if any(bad_word.lower() in text.lower().split() for bad_word in self.llmState.blacklist):
             return True
-        else:
-            return False
+        return False
 
     # Ghép lại injection từ tất cả module vào một prompt đơn giản
     def assemble_injections(self, injections=None):
@@ -45,9 +41,7 @@ class AbstractLLMWrapper:
         # Tập hợp tất cả injection từ mọi module vào một cái list, injection sẽ là một object gồm text và priority
         for module in self.modules.values():
             injections.append(module.get_prompt_injection())
-
         # Xoá các modules khỏi queue một khi prompt injection được lấy từ tất cả các modules
-        for module in self.modules.values():
             module.cleanup()
 
         # Sắp xếp injections theo priority ( nhỏ hơn đến lớn hơn )
@@ -82,7 +76,14 @@ class AbstractLLMWrapper:
             wrapper = [{"role": "user", "content": full_prompt}]
 
             # Xem thử có bao nhiêu token trong prompt (Không chính xác 100% nhưng vẫn ổn để ước lượng)
-            prompt_tokens = len(self.tokenizer.apply_chat_template(wrapper, tokenize=True, return_tensors="pt")[0])
+            prompt_text = self.SYSTEM_PROMPT + "\n"
+            for message in self.signals.history:
+                role = message["role"]
+                content = message["content"]
+                prompt_text += f"{role.capitalize()}: {content}\n"
+            prompt_text += "Assistant:"
+
+            prompt_tokens = len(prompt_text.split())
             # print(prompt_tokens)
 
             # Max 90% số token trong prompt để LLM có thể trả lời
@@ -99,56 +100,8 @@ class AbstractLLMWrapper:
                 messages.pop(0)
                 print("Prompt too long, removing earliest message")
 
-    def prepare_payload(self):
-        raise NotImplementedError("Không có dữ liệu cấu hình")
-
     def prompt(self):
-        if not self.llmState.enabled:
-            return
-
-        self.signals.AI_thinking = True
-        self.signals.new_message = False
-        self.signals.sio_queue.put(("reset_next_message", None))
-
-        data = self.prepare_payload()
-
-        stream_response = requests.post(
-            self.LLM_ENDPOINT + "/v1/chat/completions", 
-            headers=self.headers, json=data,
-            verify=False, # Cẩn thận dòng này khi lên production
-            stream=True
-        )
-        response_stream = sseclient.SSEClient(stream_response)
-
-        AI_message = ''
-        for event in response_stream.events():
-            # Check xem message tiếp có bị xoá không, xoá thì skip không xử lí chunk nào nữa
-            if self.llmState.next_cancelled:
-                continue
-
-            payload = json.loads(event.data)
-            chunk = payload['choices'][0]['delta']['content']
-            AI_message += chunk
-            self.signals.sio_queue.put(("next_chunk", chunk))
-
-        if self.llmState.next_cancelled:
-            self.llmState.next_cancelled = False
-            self.signals.sio_queue.put(("reset_next_message", None))
-            self.signals.AI_thinking = False
-            return
-
-        print("AI SAID: " + AI_message)
-        self.signals.last_message_time = time.time()
-        self.signals.AI_speaking = True
-        self.signals.AI_thinking = False
-
-        if self.is_filtered(AI_message):
-            AI_message = "Filtered."
-            self.signals.sio_queue.put(("reset_next_message", None))
-            self.signals.sio_queue.put(("next_chunk", "Filtered."))
-
-        self.signals.history.append({"role": "assistant", "content": AI_message})
-        self.tts.play(AI_message)
+        raise NotImplementedError("Child class must implement its own prompt() method.")
 
     class API:
         def __init__(self, outer):
