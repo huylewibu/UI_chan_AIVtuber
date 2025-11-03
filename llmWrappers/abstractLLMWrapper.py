@@ -76,7 +76,14 @@ class AbstractLLMWrapper:
             wrapper = [{"role": "user", "content": full_prompt}]
 
             # Xem thử có bao nhiêu token trong prompt (Không chính xác 100% nhưng vẫn ổn để ước lượng)
-            prompt_tokens = len(self.tokenizer.apply_chat_template(wrapper, tokenize=True, return_tensors="pt")[0])
+            prompt_text = self.SYSTEM_PROMPT + "\n"
+            for message in self.signals.history:
+                role = message["role"]
+                content = message["content"]
+                prompt_text += f"{role.capitalize()}: {content}\n"
+            prompt_text += "Assistant:"
+
+            prompt_tokens = len(prompt_text.split())
             # print(prompt_tokens)
 
             # Max 90% số token trong prompt để LLM có thể trả lời

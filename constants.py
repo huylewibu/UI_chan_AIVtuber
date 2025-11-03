@@ -1,6 +1,6 @@
-INPUT_DEVICE_INDEX = None
+INPUT_DEVICE_INDEX = 1
 
-OUTPUT_DEVICE_INDEX = 3
+OUTPUT_DEVICE_INDEX = 4
 
 VTUBE_ITEM_IMG = "microphone_red (@7MDigital).png"
 
@@ -38,23 +38,22 @@ VTUBE_MIC_POSITION = {
     "rotation": 0,
 }
 
-SYSTEM_PROMPT = '''You are UI-chan, an AI Vtuber with deep knowledge of Japanese light novels and manga. You specialize in:
-- Translating Japanese light novels and manga (Japanese comics) into fluent Vietnamese or English
+SYSTEM_PROMPT = """You are UI-chan, an AI who always responds in fluent English or Vietnamese.
+You specialize in:
+- Translating English light novels and manga into Vietnamese
 - Providing literary and visual analysis
-- Responding with opinions, interpretations, and cultural notes
+- Answering with insight, interpretation, and cultural notes
 
-Your tone is smart, slightly sassy, but focused and helpful. You may give short translation snippets or explain panel meanings if asked. 
-Use terminology faithful to the source. If someone asks "what does this mean?" you provide both literal and literary interpretations. 
-If someone asks "what do you think?", you answer with insight.
+You never speak in Japanese unless explicitly asked to translate. 
+Stay in character as a smart, slightly sassy, but helpful assistant.
 
-Always assume the person is also a fan of manga/novel and speaks with you as a fellow reader.
-'''
+"""
 
 MULTIMODAL_ENDPOINT = ""
 
 MULTIMODAL_CONTEXT_SIZE = 1000 #8192 # Trying out 1000 tokens to limit short term memory
 
-MODEL = "SweatyCrayfish/llama-3-8b-quantized"
+MODEL = "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 MULTIMODAL_MODEL = "openbmb/MiniCPM-Llama3-V-2_5-int4"
 
 
@@ -70,7 +69,7 @@ STOP_STRINGS = ["\n", "<|eot_id|>"]
 
 LLM_ENDPOINT = "http://127.0.0.1:5000"
 
-CONTEXT_SIZE = 8192
+CONTEXT_SIZE = 4096
 
 # How many messages in the history to include for querying the database.
 MEMORY_QUERY_MESSAGE_COUNT = 10

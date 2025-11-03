@@ -29,11 +29,13 @@ class TTS:
 
     def play(self, message):
         if not self.enabled:
+            print("[TTS] Ignored (disabled)")
             return
 
         if not message.strip():
+            print("[TTS] Ignored (empty message)")
             return
-
+        print(f"[TTS] Playing: {message[:50]}...")
         self.signals.sio_queue.put(("current_message", message))
         self.stream.feed(message)
         self.stream.play_async()
@@ -43,9 +45,11 @@ class TTS:
         self.signals.AI_speaking = False
 
     def audio_started(self):
+        print("[TTS] Audio started")
         self.signals.AI_speaking = True
 
     def audio_ended(self):
+        print("[TTS] Audio ended")
         self.signals.last_message_time = time.time()
         self.signals.AI_speaking = False
 

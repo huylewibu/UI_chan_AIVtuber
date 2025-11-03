@@ -44,7 +44,7 @@ async def main():
     llmState = LLMState()
     llms = {
         "text": TextLLMWrapper(signals, tts, llmState, modules),
-        "image": ImageLLMWrapper(signals, tts, llmState, modules)
+        # "image": ImageLLMWrapper(signals, tts, llmState, modules)
     }
 
     prompter = Prompter(signals, llms, modules)

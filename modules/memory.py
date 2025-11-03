@@ -2,7 +2,7 @@ from modules.module import Module
 from constants import *
 from chromadb.config import Settings
 import chromadb # Vector database cho AI LLM
-import requests
+import torch
 import json
 import uuid
 import asyncio
@@ -91,40 +91,25 @@ class Memory(Module):
                 for message in messages:
                     chat_section += message["content"]
 
-                data = {
-                    "mode": "instruct",
-                    "max_tokens": 200,
-                    "skip_special_tokens": False,  # Necessary for Llama 3
-                    "custom_token_bans": BANNED_TOKENS,
-                    "stop": STOP_STRINGS.remove("\n"),
-                    "messages": [{
-                        "role": "user",
-                        "content": chat_section + MEMORY_PROMPT
-                    }]
-                }
-                headers = {"Content-Type": "application/json"}
+                chat_input = chat_section + MEMORY_PROMPT
+                tokenizer = self.modules["text"].tokenizer
+                model = self.modules["text"].model
 
-                response = requests.post(LLM_ENDPOINT + "/v1/chat/completions", headers=headers, json=data, verify=False)
-                raw_memories = response.json()['choices'][0]['message']['content']
-                # chat_input = chat_section + MEMORY_PROMPT
-                # tokenizer = self.modules["text"].tokenizer
-                # model = self.modules["text"].model
+                inputs = tokenizer(chat_input, return_tensors="pt").to(model.device)
 
-                # inputs = tokenizer(chat_input, return_tensors="pt").to(model.device)
+                with torch.no_grad():
+                    outputs = model.generate(
+                        **inputs,
+                        max_new_tokens=200,
+                        do_sample=True,
+                        temperature=0.7,
+                        top_p=0.9,
+                        repetition_penalty=1.1,
+                        pad_token_id=tokenizer.eos_token_id
+                    )
 
-                # with torch.no_grad():
-                #     outputs = model.generate(
-                #         **inputs,
-                #         max_new_tokens=200,
-                #         do_sample=True,
-                #         temperature=0.7,
-                #         top_p=0.9,
-                #         repetition_penalty=1.1,
-                #         pad_token_id=tokenizer.eos_token_id
-                #     )
-
-                # generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-                # raw_memories = generated_text[len(chat_input):].strip()
+                generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                raw_memories = generated_text[len(chat_input):].strip()
                 
                 # Split từng phần Q&A và thêm vào memory mới trong db 
                 for memory in raw_memories.split("{qa}"):

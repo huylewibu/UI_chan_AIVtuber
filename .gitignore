@@ -1,4 +1,4 @@
-venv/
+venv311/
 models/
 deepspeed-0.14.0+cu118-cp311-cp311-win_amd64.whl
 .fleet/
@@ -9,3 +9,4 @@ realtimesst.log
 vtubeStudio_token.txt
 memories.json
 chroma.db/
+local_models/
